@@ -1,0 +1,100 @@
+/**
+ * Game logic: keyboard input, movement and action counting.
+ */
+class ShapeGame {
+    field Shape shape;
+    field int moveCount;
+    field int shapeType;
+
+    /** Create a new game according to the selected shape type. */
+    constructor ShapeGame new(int type) {
+        let shape = Shape.new(type);
+        let shapeType = type;
+        let moveCount = 0;
+        return this;
+    }
+
+    /** Main game loop. */
+    method void run() {
+        var char key;
+        var boolean exit;
+        let exit = false;
+        let key = 0;
+
+        // Centered instructions at the top of the screen.
+        do Output.moveCursor(0, 25);
+        do Output.printString("--- COMMANDS ---");
+        do Output.moveCursor(2, 22);
+        do Output.printString("ARROWS: Move Shape");
+        do Output.moveCursor(3, 22);
+        do Output.printString("R key : Rotate 90 deg");
+        do Output.moveCursor(4, 22);
+        do Output.printString("Q key : Quit & Result");
+        do Output.moveCursor(5, 25);
+        do Output.printString("-----------------");
+
+        while (~exit) {
+            // Wait for a key press.
+            while (key = 0) {
+                let key = Keyboard.keyPressed();
+            }
+
+            if (key = 81) {
+                let exit = true;
+            }
+            if (key = 132) {
+                do shape.moveRight();
+                let moveCount = moveCount + 1;
+            }
+            if (key = 130) {
+                do shape.moveLeft();
+                let moveCount = moveCount + 1;
+            }
+            if (key = 131) {
+                do shape.moveUp();
+                let moveCount = moveCount + 1;
+            }
+            if (key = 133) {
+                do shape.moveDown();
+                let moveCount = moveCount + 1;
+            }
+            if (key = 82) {
+                do shape.rotate();
+                let moveCount = moveCount + 1;
+            }
+
+            // Wait until the key is released, so one press is counted once.
+            while (~(key = 0)) {
+                let key = Keyboard.keyPressed();
+            }
+        }
+
+        do finish();
+        return;
+    }
+
+    /** Print a final result screen. */
+    method void finish() {
+        do Screen.clearScreen();
+        do Output.moveCursor(10, 22);
+        
+        if (shapeType = 1) {
+            do Output.printString("Selected: Rectangle");
+        }
+        else {
+            do Output.printString("Selected: Triangle");
+        }
+        
+        do Output.moveCursor(12, 22);
+        do Output.printString("Total Actions: ");
+        do Output.printInt(moveCount);
+        return;
+    }
+
+    /** Free memory. */
+    method void dispose() {
+        do shape.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

@@ -1,0 +1,134 @@
+class Shape {
+    field int x, y;
+    field int size;
+    field int type;      // 1 = Rectangle, 2 = Triangle
+    field int rotation;
+
+    constructor Shape new(int Atype) {
+        // Bigger shape, centered horizontally and placed below the instructions.
+        let size = 70;
+        let x = 221;
+        let y = 105;
+
+        let type = Atype;
+        let rotation = 0;
+        do draw();
+        return this;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    // Draw the selected shape.
+    method void draw() {
+        do Screen.setColor(true);
+        if (type = 1) {
+            do drawRectangle();
+        }
+        else {
+            do drawTriangle();
+        }
+        return;
+    }
+
+    // Erase the full area that the shape can occupy.
+    method void erase() {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(x, y, x + size, y + size);
+        return;
+    }
+
+    // Draw a rectangle. Rotation changes its orientation inside the same area.
+    method void drawRectangle() {
+        var int half;
+        let half = size / 2;
+
+        if (rotation = 0) {
+            do Screen.drawRectangle(x, y + half, x + size, y + size);
+        }
+        if (rotation = 90) {
+            do Screen.drawRectangle(x, y, x + half, y + size);
+        }
+        if (rotation = 180) {
+            do Screen.drawRectangle(x, y, x + size, y + half);
+        }
+        if (rotation = 270) {
+            do Screen.drawRectangle(x + half, y, x + size, y + size);
+        }
+        return;
+    }
+
+    // Draw a triangle that supports rotations of 0, 90, 180 and 270 degrees.
+    method void drawTriangle() {
+        if (rotation = 0) {
+            do Screen.drawLine(x, y + size, x + size, y + size);
+            do Screen.drawLine(x, y + size, x + (size / 2), y);
+            do Screen.drawLine(x + size, y + size, x + (size / 2), y);
+        }
+        if (rotation = 90) {
+            do Screen.drawLine(x, y, x, y + size);
+            do Screen.drawLine(x, y, x + size, y + (size / 2));
+            do Screen.drawLine(x, y + size, x + size, y + (size / 2));
+        }
+        if (rotation = 180) {
+            do Screen.drawLine(x, y, x + size, y);
+            do Screen.drawLine(x, y, x + (size / 2), y + size);
+            do Screen.drawLine(x + size, y, x + (size / 2), y + size);
+        }
+        if (rotation = 270) {
+            do Screen.drawLine(x + size, y, x + size, y + size);
+            do Screen.drawLine(x + size, y, x, y + (size / 2));
+            do Screen.drawLine(x + size, y + size, x, y + (size / 2));
+        }
+        return;
+    }
+
+    // Movement functions. The top limit keeps the shape below the menu area.
+    method void moveRight() {
+        if ((x + size) < 500) {
+            do erase();
+            let x = x + 4;
+            do draw();
+        }
+        return;
+    }
+
+    method void moveLeft() {
+        if (x > 10) {
+            do erase();
+            let x = x - 4;
+            do draw();
+        }
+        return;
+    }
+
+    method void moveUp() {
+        if (y > 80) {
+            do erase();
+            let y = y - 4;
+            do draw();
+        }
+        return;
+    }
+
+    method void moveDown() {
+        if ((y + size) < 250) {
+            do erase();
+            let y = y + 4;
+            do draw();
+        }
+        return;
+    }
+    
+    method void rotate() {
+        do erase();
+        let rotation = rotation + 90;
+        if (rotation = 360) {
+            let rotation = 0;
+        }
+        do draw();
+        return;
+    }
+}
