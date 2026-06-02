@@ -1,33 +1,27 @@
 #lang racket
 (require racket/string)
-;; טעינת הפונקציות מהטוקנייזר (וודאי ששני הקבצים נמצאים באותה התיקייה)
+;; טעינת פונקציות הטוקנייזר
 (require "tokenizer.rkt") 
 
-;; =================================================================
-;; פונקציות עזר של מנוע הקימפול
-;; =================================================================
-
-;; 1. ייצור שורת XML עם הזחה מתאימה
+;; עזרים
+;; עיצוב שורת XML עם הזחה
 (define (format-xml-line indent-level xml-content)
   (define spaces (make-string (* indent-level 2) #\space))
   (string-append spaces xml-content))
 
-;; 2. שליפת הטוקן הגולמי מתוך מחרוזת ה-XML של הטוקנייזר
+;; חילוץ ערך הטוקן ממחרוזת XML
 (define (get-token-value xml-token-string)
   (define match (regexp-match #px"<[^>]+>\\s*(.*?)\\s*</[^>]+>" xml-token-string))
   (if match
       (cadr match)
       ""))
 
-;; 3. בדיקה האם הטוקן הוא אופרטור מתמטי/לוגי
+;; בדיקה אם הטוקן הוא אופרטור
 (define (is-op? token-val)
   (member token-val '("+" "-" "*" "/" "&amp;" "|" "&lt;" "&gt;" "=" "<" ">" "&")))
 
-;; =================================================================
-;; פונקציות הקימפול של ביטויים (Expressions & Terms)
-;; =================================================================
-
-;; compile-expression-list: מטפלת ברשימת פרמטרים שמועברים לפונקציה, מופרדים בפסיקים
+;; קימפול ביטויים (Expressions & Terms)
+;; קימפול רשימת ביטויים (פרמטרים מופרדים בפסיק)
 (define (compile-expression-list tokens indent-level)
   (define open-tag (format-xml-line indent-level "<expressionList>"))
   
@@ -47,7 +41,7 @@
   (define close-tag (format-xml-line indent-level "</expressionList>"))
   (cons (append (list open-tag) (car res) (list close-tag)) (cdr res)))
 
-;; compile-subroutine-call: פונקציית עזר לזיהוי וקריאה לפונקציות (למשל Array.new או readInt)
+;; קימפול קריאה לפונקציה או מתודה
 (define (compile-subroutine-call tokens indent-level)
   (define first-token (car tokens))
   (define next-val (get-token-value (cadr tokens)))
@@ -70,14 +64,14 @@
              (line-close (format-xml-line indent-level (car rem-after-list))))
         (cons (append (list line-func line-open) explist-xml (list line-close)) (cdr rem-after-list)))))
 
-;; compile-term: מטפלת באיבר בודד (מספר, מחרוזת, שם משתנה, קריאה לפונקציה, מערך או ביטוי בסוגריים)
+;; קימפול איבר בודד (Term)
 (define (compile-term tokens indent-level)
   (define open-tag (format-xml-line indent-level "<term>"))
   (define first-token (car tokens))
   (define first-val (get-token-value first-token))
   
   (cond
-    ;; מקרה 1: אופרטור אונרי (~ או -)
+    ;; אופרטור אונרי
     [(or (string=? first-val "-") (string=? first-val "~"))
      (let* ((line-op (format-xml-line (+ indent-level 1) first-token))
             (term-res (compile-term (cdr tokens) (+ indent-level 1)))
@@ -85,7 +79,7 @@
             (rem (cdr term-res)))
        (cons (append (list open-tag line-op) term-xml (list (format-xml-line indent-level "</term>"))) rem))]
        
-    ;; מקרה 2: ביטוי בתוך סוגריים ( expression )
+    ;; ביטוי בסוגריים
     [(string=? first-val "(")
      (let* ((line-open (format-xml-line (+ indent-level 1) first-token))
             (exp-res (compile-expression (cdr tokens) (+ indent-level 1)))
@@ -95,18 +89,18 @@
             (rem (cdr rem-after-exp)))
        (cons (append (list open-tag line-open) exp-xml (list line-close (format-xml-line indent-level "</term>"))) rem))]
        
-    ;; מקרה 3: קבועים (מספרים, מחרוזות, מילים שמורות)
+    ;; קבועים ומילים שמורות
     [(or (string-contains? first-token "<integerConstant>") 
          (string-contains? first-token "<stringConstant>")
          (string-contains? first-token "<keyword>"))
      (cons (list open-tag (format-xml-line (+ indent-level 1) first-token) (format-xml-line indent-level "</term>")) 
            (cdr tokens))]
            
-    ;; מקרה 4: מזהה (משתנה רגיל, גישה למערך או קריאה לפונקציה)
+    ;; מזהה (משתנה, מערך או קריאה)
     [(string-contains? first-token "<identifier>")
      (let ((next-val (if (null? (cdr tokens)) "" (get-token-value (cadr tokens)))))
        (cond
-         ;; גישה למערך: a[i]
+         ;; גישה למערך
          [(string=? next-val "[")
           (let* ((line-id (format-xml-line (+ indent-level 1) first-token))
                  (line-bracket (format-xml-line (+ indent-level 1) (cadr tokens)))
@@ -131,7 +125,7 @@
                 
     [else (cons (list open-tag (format-xml-line (+ indent-level 1) first-token) (format-xml-line indent-level "</term>")) (cdr tokens))]))
 
-;; compile-expression: מנתחת ביטוי מורכב שיכול להכיל איברים ואופרטורים (term op term)
+;; קימפול ביטוי שלם
 (define (compile-expression tokens indent-level)
   (define open-tag (format-xml-line indent-level "<expression>"))
   
@@ -158,10 +152,7 @@
   (define close-tag (format-xml-line indent-level "</expression>"))
   (cons (append (list open-tag) term-xml ops-xml (list close-tag)) rem))
 
-;; =================================================================
-;; פונקציות הקימפול של פקודות (Statements)
-;; =================================================================
-
+;; קימפול פקודות (Statements)
 (define (compile-let tokens indent-level)
   (define open-tag (format-xml-line indent-level "<letStatement>"))
   (define t-let (car tokens))
@@ -328,10 +319,7 @@
   (define close-tag (format-xml-line indent-level "</statements>"))
   (cons (append (list open-tag) (car loop-res) (list close-tag)) (cdr loop-res)))
 
-;; =================================================================
-;; פונקציות הקימפול של חלקי ה-Class
-;; =================================================================
-
+;; קימפול מבנה המחלקה (Class)
 (define (compile-class-var-dec tokens indent-level)
   (define open-tag (format-xml-line indent-level "<classVarDec>"))
   (define (collect-until-semi current-tokens acc)
@@ -446,9 +434,7 @@
   
   (parse-class-body start-tokens '()))
 
-;; =================================================================
-;; פונקציית הפעלה ראשית
-;; =================================================================
+;; הפעלה ראשית של הפארסר
 (define (start-parsing jack-file-path output-file-path)
   (define tokens (map token->xml-string (tokenize jack-file-path)))
   (define result (compile-class tokens 0))
@@ -456,23 +442,27 @@
   (display-to-file (string-join final-xml-lines "\n") output-file-path #:exists 'replace)
   (displayln (format "Success! ~a has been parsed into ~a" jack-file-path output-file-path)))
 
-;; =================================================================
-;; פונקציה לריצה אוטומטית על תיקייה (עם דריסת קבצים קיימים)
-;; =================================================================
+;; ריצה אוטומטית על תיקייה (יצירת xml ו-T.xml)
 (define (compile-directory target-dir)
-  ;; עוברים על כל הקבצים בתיקייה שסופקה
+  ;; מעבר על קבצי התיקייה
   (for ([file (directory-list target-dir)])
     (define file-str (path->string file))
-    ;; בודקים אם הקובץ מסתיים ב-.jack
+    ;; סינון קבצי jack
     (when (string-suffix? file-str ".jack")
-      ;; מרכיבים את הנתיב המלא לקובץ הקלט
+      ;; הגדרת נתיבי קלט ופלט
       (define jack-path (build-path target-dir file-str))
-      ;; מחליפים את הסיומת ל-.xml ומרכיבים את הנתיב לקובץ הפלט באותה התיקייה
       (define xml-path (build-path target-dir (string-replace file-str ".jack" ".xml")))
-      ;; מריצים את הקימפול (ידרוס את קובץ ה-XML הקיים)
+      (define t-xml-path (build-path target-dir (string-replace file-str ".jack" "T.xml")))
+      
+      ;; יצירת קובץ טוקנים (T.xml)
+      (define tokens (map token->xml-string (tokenize (path->string jack-path))))
+      (define full-t-xml (string-join (append '("<tokens>") tokens '("</tokens>")) "\n"))
+      (display-to-file full-t-xml (path->string t-xml-path) #:exists 'replace)
+      (displayln (format "Success! ~a has been tokenized into ~a" file-str (string-replace file-str ".jack" "T.xml")))
+      
+      ;; יצירת עץ תחביר (xml)
       (start-parsing (path->string jack-path) (path->string xml-path)))))
 
-;; הרצת הפונקציה על התיקייה המבוקשת
-;; (שימי לב לעדכן את הנתיב לשם של התיקייה המשוכפלת שלך, למשל nand2tetris_copy)
+;; הרצת הקימפול (יש לעדכן לנתיב התיקייה המשוכפלת)
 (compile-directory 
- "C:\\Users\\micha\\OneDrive\\שולחן העבודה\\שנה ד\\סמסטר ב\\עקרונות\\nand2tetris\\projects\\10\\Square")
+"C:\\Users\\micha\\OneDrive\\שולחן העבודה\\שנה ד\\סמסטר ב\\עקרונות\\nand2tetris\\projects\\10\\ExpressionLessSquare")
