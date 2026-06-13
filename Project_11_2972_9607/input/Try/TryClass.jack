@@ -1,0 +1,82 @@
+class TryClass 
+{
+    
+    static int w;
+    
+    field int x;
+    field int y;
+    field int z;
+	
+	
+	
+     
+    constructor TryClass new(int Ax, int Ay)
+    {
+        	var int a,b;
+        	
+        	let x = Ax;
+        	let y = Ay;
+			let z = 0;
+			
+			let w = w + 1;
+			
+          	return this;
+    }
+
+	method void TryMethod()
+    {
+
+		var int i;
+		
+		do Output.printInt(x * y);
+		
+		let z = 5;
+		let x = x + 1;
+		
+		do TryMethod2();
+			
+		let i = TryMethod2();
+		
+		return;
+    }
+    
+	method int TryMethod2()
+    {
+		do Output.printString("tryM2");
+		
+		return 0;
+    }
+    
+    function int TryFunc(int Az)
+    {
+    	
+		var int j;
+    	
+      	let j = w + Az;
+    	
+    	do Output.printString("TryFunc!");
+		
+		return j;
+    
+    }
+    
+	function void TryFunc2(int Az)
+    {
+ 	   	var int i;
+		let i= TryClass.TryFunc(6);
+		return;
+    
+    }
+	
+	
+	method void tryArray()
+	{	
+		var Array a;
+		let a = Array.new(10);
+		let a[3] = 2;
+		let a[2] = 22;
+		
+		return;
+	}
+    
+ }

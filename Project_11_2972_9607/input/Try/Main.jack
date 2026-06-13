@@ -1,0 +1,39 @@
+class Main 
+{
+
+
+    function void main() 
+	{
+        var TryClass try;
+		var int i;
+
+		let try = TryClass.new(2,3);
+        
+		do try.TryMethod();
+		
+		let i = TryClass.TryFunc(6);
+			
+		
+        return;
+    }
+}
+
+
+function Main.main 2
+
+push constant 2
+push constant 3
+call TryClass.new 2
+pop local 0
+
+push local 0
+call TryClass.TryMethod 1
+pop temp 0
+
+
+push constant 6
+call TryClass.TryFunc 1
+pop local 1
+
+push constant 0
+return

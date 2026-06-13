@@ -1,0 +1,179 @@
+function SquareGame.new 0
+push constant 2
+call Memory.alloc 1
+pop pointer 0
+push constant 0
+push constant 0
+push constant 30
+call Square.new 3
+pop this 0
+push constant 0
+pop this 1
+push pointer 0
+return
+function SquareGame.dispose 0
+push argument 0
+pop pointer 0
+push this 0
+call Square.dispose 1
+pop temp 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function SquareGame.moveSquare 0
+push argument 0
+pop pointer 0
+push this 1
+push constant 1
+eq
+if-goto IF_TRUE19
+goto IF_FALSE20
+label IF_TRUE19
+push this 0
+call Square.moveUp 1
+pop temp 0
+label IF_FALSE20
+push this 1
+push constant 2
+eq
+if-goto IF_TRUE22
+goto IF_FALSE23
+label IF_TRUE22
+push this 0
+call Square.moveDown 1
+pop temp 0
+label IF_FALSE23
+push this 1
+push constant 3
+eq
+if-goto IF_TRUE25
+goto IF_FALSE26
+label IF_TRUE25
+push this 0
+call Square.moveLeft 1
+pop temp 0
+label IF_FALSE26
+push this 1
+push constant 4
+eq
+if-goto IF_TRUE28
+goto IF_FALSE29
+label IF_TRUE28
+push this 0
+call Square.moveRight 1
+pop temp 0
+label IF_FALSE29
+push constant 5
+call Sys.wait 1
+pop temp 0
+push constant 0
+return
+function SquareGame.run 2
+push argument 0
+pop pointer 0
+push constant 0
+pop local 1
+label WHILE_EXP31
+push local 1
+not
+not
+if-goto WHILE_END32
+label WHILE_EXP33
+push local 0
+push constant 0
+eq
+not
+if-goto WHILE_END34
+call Keyboard.keyPressed 0
+pop local 0
+push pointer 0
+call SquareGame.moveSquare 1
+pop temp 0
+goto WHILE_EXP33
+label WHILE_END34
+push local 0
+push constant 81
+eq
+if-goto IF_TRUE35
+goto IF_FALSE36
+label IF_TRUE35
+push constant 0
+not
+pop local 1
+label IF_FALSE36
+push local 0
+push constant 90
+eq
+if-goto IF_TRUE38
+goto IF_FALSE39
+label IF_TRUE38
+push this 0
+call Square.decSize 1
+pop temp 0
+label IF_FALSE39
+push local 0
+push constant 88
+eq
+if-goto IF_TRUE41
+goto IF_FALSE42
+label IF_TRUE41
+push this 0
+call Square.incSize 1
+pop temp 0
+label IF_FALSE42
+push local 0
+push constant 131
+eq
+if-goto IF_TRUE44
+goto IF_FALSE45
+label IF_TRUE44
+push constant 1
+pop this 1
+label IF_FALSE45
+push local 0
+push constant 133
+eq
+if-goto IF_TRUE47
+goto IF_FALSE48
+label IF_TRUE47
+push constant 2
+pop this 1
+label IF_FALSE48
+push local 0
+push constant 130
+eq
+if-goto IF_TRUE50
+goto IF_FALSE51
+label IF_TRUE50
+push constant 3
+pop this 1
+label IF_FALSE51
+push local 0
+push constant 132
+eq
+if-goto IF_TRUE53
+goto IF_FALSE54
+label IF_TRUE53
+push constant 4
+pop this 1
+label IF_FALSE54
+label WHILE_EXP56
+push local 0
+push constant 0
+eq
+not
+not
+if-goto WHILE_END57
+call Keyboard.keyPressed 0
+pop local 0
+push pointer 0
+call SquareGame.moveSquare 1
+pop temp 0
+goto WHILE_EXP56
+label WHILE_END57
+goto WHILE_EXP31
+label WHILE_END32
+push constant 0
+return
